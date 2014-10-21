@@ -1,0 +1,5 @@
+P1
+P2
+p3
+Average Waiting Time: 
+Average Turnaround Time: 

@@ -1,0 +1,13 @@
+Scheduling Algorithm: RR 4
+
+P1
+Arrival Time: 0
+Burst Time: 20
+
+P2
+Arrival Time: 0
+Burst Time: 4
+
+P3
+Arrival Time: 0
+Burst Time: 4

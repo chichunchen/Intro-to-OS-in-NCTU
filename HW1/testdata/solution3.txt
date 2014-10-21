@@ -1,0 +1,9 @@
+P1     0-4
+P2     4-8
+P3     8-12
+P1     12-16
+P1     16-20
+P1     20-24
+P1     24-28
+Average Waiting Time: 4
+Average Turnaround Time: 16
