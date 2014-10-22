@@ -177,6 +177,9 @@ void fcfs()
             }
         }
 
+        if(time < p[smallest].arrive_t)
+            time = p[smallest].arrive_t;
+
         myfile << "P" << smallest << "\t" << time << "-";
 
         time += p[smallest].burst_t;
@@ -189,8 +192,8 @@ void fcfs()
         count++;
     }
 
-    myfile << "Average Waiting Time: " << waiting_time / process_count << endl;
-    myfile << "Average Turnaround Time: " << turnaround_time / process_count << endl;
+    myfile << "Average Waiting Time: " <<(double)waiting_time / process_count << endl;
+    myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
 
 void srtf()
@@ -242,8 +245,8 @@ void rr(int quantum)
         else if(p[i+1].arrive_t <= time)
             i++;
     }
-    myfile << "Average Waiting Time: " << waiting_time / process_count << endl;
-    myfile << "Average Turnaround Time: " << turnaround_time / process_count << endl;
+    myfile << "Average Waiting Time: " << (double)waiting_time / process_count << endl;
+    myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
 
 void testformat()
