@@ -13,11 +13,12 @@ public:
         arrive_t = 0;
         burst_t = 0;
     }
-}p1, p2, p3; 
+} p[9]; 
 
 void readfile(string);
 void writefile();
 void schedule();
+void testformat();
 
 int main()
 {
@@ -25,7 +26,7 @@ int main()
     cout << "Enter file name: ";
     cin >> filename;
     readfile(filename);
-    schedule();
+    testformat();
     writefile();
 
     return 0;
@@ -37,31 +38,20 @@ void readfile(string filename)
     string line;
     ifstream myfile (filename);
     if (myfile.is_open()) {
-        // while ( getline (myfile,line) )
-            // cout << line << '\n';
         
         getline(myfile, line);
         name_of_algo = line.erase(0, 22);
-        getline(myfile, line);
-        getline(myfile, line);
-        getline(myfile, line);
-        p1.arrive_t = atoi(line.erase(0, 14).c_str());
-        getline(myfile, line);
-        p1.burst_t = atoi(line.erase(0, 12).c_str());
-
-        getline(myfile, line);
-        getline(myfile, line);
-        getline(myfile, line);
-        p2.arrive_t = atoi(line.erase(0, 14).c_str());
-        getline(myfile, line);
-        p2.burst_t = atoi(line.erase(0, 12).c_str());
-
-        getline(myfile, line);
-        getline(myfile, line);
-        getline(myfile, line);
-        p3.arrive_t = atoi(line.erase(0, 14).c_str());
-        getline(myfile, line);
-        p3.burst_t = atoi(line.erase(0, 12).c_str());
+       
+        int i = 1;
+        while(getline(myfile, line) && i <= 9) {            
+            getline(myfile, line);
+            getline(myfile, line);
+            p[i].arrive_t = atoi(line.erase(0, 14).c_str());
+            getline(myfile, line);
+            p[i].burst_t = atoi(line.erase(0, 12).c_str());
+            
+            i++;
+        }
 
         myfile.close();
     }
@@ -96,4 +86,14 @@ void schedule()
     {
 
     } 
+}
+
+void testformat()
+{
+    cout << name_of_algo << endl;
+    for(int i = 1; i <= 9; i++) {
+        cout << "process" << i << endl;
+        cout << "p[" << i << "] arrive time: " << p[i].arrive_t << endl;
+        cout << "p[" << i << "] burst time: " << p[i].burst_t << endl;
+    }
 }
