@@ -2,8 +2,7 @@
 #include <fstream>
 using namespace std;
 
-const int MAX_SIZE = 10;
-
+const int MAX_SIZE = 10; 
 string name_of_algo;
 int process_count = 0;
 int waiting_time = 0;
@@ -29,7 +28,7 @@ public:
         burst_t = time;
         remain_t = time;
     }
-} p[9]; 
+} p[11]; 
 
 class ProcessQueue {
 private:
@@ -163,7 +162,35 @@ void cpu_scheduler()
 
 void fcfs()
 {
+    ofstream myfile;
+    myfile.open ("0013428.txt");
+
+    int count = 0, time = 0, smallest; 
+    p[10].arrive_t = 9999;
+
+    while(count != process_count) {
+        smallest = 10;
     
+        for(int i = 1; i <= process_count; i++) {
+            if(p[i].arrive_t < p[smallest].arrive_t && p[i].remain_t > 0) {
+                smallest = i;
+            }
+        }
+
+        myfile << "P" << smallest << "\t" << time << "-";
+
+        time += p[smallest].burst_t;
+        waiting_time += time - p[smallest].arrive_t - p[smallest].burst_t;
+        turnaround_time += time - p[smallest].arrive_t;
+
+        myfile << time << endl;
+
+        p[smallest].remain_t = 0;
+        count++;
+    }
+
+    myfile << "Average Waiting Time: " << waiting_time / process_count << endl;
+    myfile << "Average Turnaround Time: " << turnaround_time / process_count << endl;
 }
 
 void srtf()
