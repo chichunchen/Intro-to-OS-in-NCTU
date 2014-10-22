@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 using namespace std;
 
 const int MAX_SIZE = 10; 
@@ -44,7 +45,7 @@ int main()
     cout << "Enter file name: ";
     cin >> filename;
     readfile(filename);
-    // testformat();
+    
     cpu_scheduler();
 
     return 0;
@@ -126,7 +127,7 @@ void fcfs()
         p[smallest].remain_t = 0;
         count++;
     }
-
+    myfile << fixed << setprecision(2);
     myfile << "Average Waiting Time: " <<(double)waiting_time / process_count << endl;
     myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
@@ -157,6 +158,8 @@ void srtf()
             turnaround_time += time - p[smallest].arrive_t;
         }
     }
+
+    myfile << fixed << setprecision(2);
     myfile << "Average Waiting Time: " << (double) waiting_time / process_count << endl;
     myfile << "Average Turnaround Time: " << (double) turnaround_time / process_count << endl;
 }
@@ -205,6 +208,8 @@ void rr(int quantum)
         else if(p[i+1].arrive_t <= time)
             i++;
     }
+
+    myfile << fixed << setprecision(2);
     myfile << "Average Waiting Time: " << (double)waiting_time / process_count << endl;
     myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
