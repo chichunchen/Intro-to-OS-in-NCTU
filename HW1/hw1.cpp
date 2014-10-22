@@ -30,57 +30,6 @@ public:
     }
 } p[11]; 
 
-class ProcessQueue {
-private:
-    int item[MAX_SIZE];
-    int rear;
-    int front;
-public:
-    ProcessQueue();
-    void enqueue(int);
-    int dequeue();
-    int size();
-    void display();
-    bool isEmpty();
-    bool isFull();
-};
-ProcessQueue::ProcessQueue(){
-    rear = -1;
-    front = 0;
-}
-void ProcessQueue::enqueue(int data){
-    item[++rear] = data;
-}
-int ProcessQueue::dequeue(){
-    return item[front++];
-}
-void ProcessQueue::display(){
-    if(!this->isEmpty()){
-        for(int i=front; i<=rear; i++)
-            cout<<item[i]<<endl;
-    }else{
-        cout<<"Queue Underflow"<<endl;
-    }
-}
-int ProcessQueue::size(){
-    return (rear - front + 1);
-}
-bool ProcessQueue::isEmpty(){
-    if(front>rear){
-        return true;
-    }else{
-        return false;
-    }
-}
-
-bool ProcessQueue::isFull(){
-    if(this->size()>=MAX_SIZE){
-        return true;
-    }else{
-        return false;
-    }
-}
-
 void readfile(string);
 void writefile();
 void cpu_scheduler();
@@ -97,7 +46,6 @@ int main()
     readfile(filename);
     // testformat();
     cpu_scheduler();
-    // writefile();
 
     return 0;
 }
@@ -126,19 +74,6 @@ void readfile(string filename)
         myfile.close();
     }
     else cout << "Unable to open file, check out the name of file.\n"; 
-}
-
-void writefile()
-{
-    ofstream myfile;
-    myfile.open ("0013428.txt");
-    for(int i = 0; i < process_count; i++) {
-        myfile << "P" << i << "    " << p[i].begin << "-" << p[i].end << endl;
-    }
-    myfile << "Average Waiting Time: \n";
-    myfile << "Average Turnaround Time: \n";
-    myfile << "Gantt Chart: \n";
-    myfile.close();
 }
 
 void cpu_scheduler()
@@ -198,7 +133,32 @@ void fcfs()
 
 void srtf()
 {
-    
+    ofstream myfile;
+    myfile.open ("0013428.txt");
+
+    int smallest;
+    int remain = 0, time;
+
+    p[10].remain_t = 9999;
+    for(time = 0; remain != process_count; time++) {
+        smallest = 10;
+        for(int i = 1; i <= process_count; i++) {
+            if(p[i].arrive_t < time && p[i].remain_t < p[smallest].remain_t && p[i].remain_t > 0) {
+                smallest = i;
+            }
+        }
+        p[smallest].remain_t--;
+
+        if(p[smallest].remain_t == 0) {
+            remain++;
+            
+            myfile << "P" << smallest << "\t" << time << endl;
+            waiting_time += time - p[smallest].burst_t - p[smallest].arrive_t;
+            turnaround_time += time - p[smallest].arrive_t;
+        }
+    }
+    myfile << "Average Waiting Time: " << (double) waiting_time / process_count << endl;
+    myfile << "Average Turnaround Time: " << (double) turnaround_time / process_count << endl;
 }
 
 void rr(int quantum)
@@ -213,7 +173,7 @@ void rr(int quantum)
 
         if(p[i].remain_t <= quantum && p[i].remain_t > 0)
         {
-            myfile << "P" << i << "    " << time << "-";
+            myfile << "P" << i << "\t" << time << "-";
 
             time += p[i].remain_t;
             p[i].remain_t = 0;
@@ -224,7 +184,7 @@ void rr(int quantum)
         }
         else if(p[i].remain_t > 0)
         {
-            myfile << "P" << i << "    " << time << "-";
+            myfile << "P" << i << "\t" << time << "-";
 
             p[i].remain_t -= quantum;
             time += quantum;
