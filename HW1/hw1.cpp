@@ -17,8 +17,11 @@ public:
 
 void readfile(string);
 void writefile();
-void schedule();
+void cpu_scheduler();
 void testformat();
+void fcfs();
+void srtf();
+void rr(int);
 
 int main()
 {
@@ -26,7 +29,8 @@ int main()
     cout << "Enter file name: ";
     cin >> filename;
     readfile(filename);
-    testformat();
+    // testformat();
+    cpu_scheduler();
     writefile();
 
     return 0;
@@ -70,22 +74,38 @@ void writefile()
     myfile.close();
 }
 
-void schedule()
+void cpu_scheduler()
 {
-    if(name_of_algo.compare("FCFS") == 0)
+    if(name_of_algo.substr(0, 4).compare("FCFS") == 0)
     {
-        cout << "kjafsdfdsa fcfs" << endl;    
+        fcfs();
     }
 
-    if(name_of_algo.compare("SRTF") == 0)
+    if(name_of_algo.substr(0, 4).compare("SRTF") == 0)
     {
-
+        srtf();
     }
 
-    if(name_of_algo.compare("RR") == 0)
+    if(name_of_algo.substr(0, 2).compare("RR") == 0)
     {
-
+        int quantum = atoi(name_of_algo.substr(3, 1).c_str());
+        rr(quantum);
     } 
+}
+
+void fcfs()
+{
+
+}
+
+void srtf()
+{
+
+}
+
+void rr(int quantum)
+{
+    cout << quantum << endl;
 }
 
 void testformat()
