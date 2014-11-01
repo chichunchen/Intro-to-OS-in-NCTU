@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+
 using namespace std;
 
 const int MAX_SIZE = 10; 
@@ -128,7 +129,7 @@ void fcfs()
         count++;
     }
     myfile << fixed << setprecision(2);
-    myfile << "Average Waiting Time: " <<(double)waiting_time / process_count << endl;
+    myfile << "Average Waiting Time: " << (double)waiting_time / process_count << endl;
     myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
 
@@ -138,11 +139,13 @@ void srtf()
     myfile.open ("0013428.txt");
 
     int smallest;
+    int smallest_last;  // store the last smallest for comparing
     int remain = 0, time;
 
     p[10].remain_t = 9999;
     for(time = 0; remain != process_count; time++) {
         smallest = 10;
+        // find the shortest burst time process
         for(int i = 1; i <= process_count; i++) {
             if(p[i].arrive_t < time && p[i].remain_t < p[smallest].remain_t && p[i].remain_t > 0) {
                 smallest = i;
@@ -150,16 +153,24 @@ void srtf()
         }
         p[smallest].remain_t--;
 
+        if(smallest != 10 && smallest != smallest_last) {
+                if(time-1 != 0)
+                    myfile << time-1 << endl;
+            myfile << "P" << smallest << "\t" << time-1 << "-";
+        }
+
         if(p[smallest].remain_t == 0) {
             remain++;
             
-            myfile << "P" << smallest << "\t" << time << endl;
             waiting_time += time - p[smallest].burst_t - p[smallest].arrive_t;
             turnaround_time += time - p[smallest].arrive_t;
         }
+        
+        // store the smallest to compare 
+        smallest_last = smallest;
     }
-
-    myfile << fixed << setprecision(2);
+    myfile << time - 1 << endl;
+    myfile << setprecision(2);
     myfile << "Average Waiting Time: " << (double) waiting_time / process_count << endl;
     myfile << "Average Turnaround Time: " << (double) turnaround_time / process_count << endl;
 }
@@ -172,8 +183,8 @@ void rr(int quantum)
     int time, i; 
     int remain = process_count;
     int flag = 0;
-    for(time = 0, i = 1; remain != 0; ) {
-
+    for(time = 0, i = 1; remain != 0; ) 
+    {
         if(p[i].remain_t <= quantum && p[i].remain_t > 0)
         {
             myfile << "P" << i << "\t" << time << "-";
@@ -195,6 +206,7 @@ void rr(int quantum)
             myfile << time << endl;
         }
 
+        // when one process is done
         if(p[i].remain_t == 0 && flag == 1)
         {
             remain--;
@@ -203,10 +215,13 @@ void rr(int quantum)
             flag = 0;
         }
 
+        // round
         if(i == process_count)
             i = 1;
         else if(p[i+1].arrive_t <= time)
             i++;
+        else
+            i = 1;
     }
 
     myfile << fixed << setprecision(2);

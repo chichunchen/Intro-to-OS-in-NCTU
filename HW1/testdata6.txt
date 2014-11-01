@@ -1,0 +1,13 @@
+Scheduling Algorithm: SRTF
+
+P1
+Arrival Time: 0
+Burst Time: 15
+
+P2
+Arrival Time: 3
+Burst Time: 6
+
+P3
+Arrival Time: 3
+Burst Time: 3
