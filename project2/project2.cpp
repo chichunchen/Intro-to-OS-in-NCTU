@@ -22,27 +22,30 @@ int main(int argc, const char *argv[])
     ofstream sharefile;
     sharefile.open("Shared.txt");
 
+    /* open result file */
+    ofstream resultfile;
+    resultfile.open("Result.txt");
+
     /* use long in case of a 64-bit system */
-    long i;
-    for(i = 0; i < thread_count; i++) {
-        pthread_create(&threads[i], &attr, read, (void*) i);
+    long thread;
+    for(thread = 0; thread < thread_count; thread++) {
+        pthread_create(&threads[thread], &attr, read, (void*) thread);
     }
 
-    for (i = 0; i < 1; i++) {
-        pthread_join(threads[i], NULL);
+    for (thread= 0; thread < 1; thread++) {
+        pthread_join(threads[thread], NULL);
     }
-
 
     free(threads);
     return 0;
 }
 
-void *read(void* id)
+void *read(void* thread_id)
 {
-    long thread_id = (long)id;
+    long tid = (long)thread_id;
     string line;
 
-    ifstream testfile(filename[thread_id]);
+    ifstream testfile(filename[tid]);
     fstream sharedfile;
     sharedfile.open("Share.txt", fstream::app);
 
@@ -51,8 +54,8 @@ void *read(void* id)
         while(getline(testfile, line)) 
         {
             pthread_mutex_lock(&mu);
-            cout << "Thread" << thread_id + 1 << " :  " << line << endl;   
-            sharedfile << "Thread" << thread_id + 1 << " :  " << line << endl;
+            /* write to share file */
+            sharedfile << "Thread" << tid + 1 << " :  " << line << endl;
             pthread_mutex_unlock(&mu);
         }
         testfile.close();
@@ -60,7 +63,6 @@ void *read(void* id)
     else {
         cout << "Unable to open file, check out the name of file.\n";
     }
-
 
     return NULL;
 }
