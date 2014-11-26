@@ -1,14 +1,29 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-
 using namespace std;
 
+/* Initialization */
+
+ofstream myfile;        /* init of output file */
 const int MAX_SIZE = 10; 
 string name_of_algo;
 int process_count = 0;
 int waiting_time = 0;
 int turnaround_time = 0;
+
+/* Function Declartion */
+
+void readfile(string);
+void writefile();
+void cpu_scheduler();
+void testformat();
+void printAvg();
+void fcfs();
+void srtf();
+void rr(int);
+
+/* Process class */
 
 class Process {
 public:
@@ -32,13 +47,6 @@ public:
     }
 } p[11]; 
 
-void readfile(string);
-void writefile();
-void cpu_scheduler();
-void testformat();
-void fcfs();
-void srtf();
-void rr(int);
 
 int main()
 {
@@ -47,33 +55,36 @@ int main()
     cin >> filename;
     readfile(filename);
     
+    myfile.open("0013428.txt");
     cpu_scheduler();
+    printAvg();
 
     return 0;
 }
 
+/* Implementation */
 
 void readfile(string filename)
 {    
     string line;
-    ifstream myfile (filename);
-    if (myfile.is_open()) {
+    ifstream testfile (filename);
+    if (testfile.is_open()) {
         
-        getline(myfile, line);
+        getline(testfile, line);
         name_of_algo = line.erase(0, 22);
        
         int i = 1;
-        while(getline(myfile, line) && i <= 9) {            
-            getline(myfile, line);
-            getline(myfile, line);
+        while(getline(testfile, line) && i <= 9) {            
+            getline(testfile, line);
+            getline(testfile, line);
             p[i].arrive_t = atoi(line.erase(0, 14).c_str());
-            getline(myfile, line);
+            getline(testfile, line);
             p[i].get_burst( atoi(line.erase(0, 12).c_str()) );
             
             i++;
         }
         process_count = i - 1;
-        myfile.close();
+        testfile.close();
     }
     else cout << "Unable to open file, check out the name of file.\n"; 
 }
@@ -97,11 +108,10 @@ void cpu_scheduler()
     } 
 }
 
+/* First-Come First-Served */
+
 void fcfs()
 {
-    ofstream myfile;
-    myfile.open ("0013428.txt");
-
     int count = 0, time = 0, smallest; 
     p[10].arrive_t = 9999;
 
@@ -128,16 +138,12 @@ void fcfs()
         p[smallest].remain_t = 0;
         count++;
     }
-    myfile << fixed << setprecision(2);
-    myfile << "Average Waiting Time: " << (double)waiting_time / process_count << endl;
-    myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
+
+/* Shortest-Remaining time First */
 
 void srtf()
 {
-    ofstream myfile;
-    myfile.open ("0013428.txt");
-
     int smallest;
     int smallest_last;  // store the last smallest for comparing
     int remain = 0, time;
@@ -171,51 +177,46 @@ void srtf()
         smallest_last = smallest;
     }
     myfile << time - 1 << endl;
-    myfile << setprecision(2);
-    myfile << "Average Waiting Time: " << (double) waiting_time / process_count << endl;
-    myfile << "Average Turnaround Time: " << (double) turnaround_time / process_count << endl;
 }
+
+/* Round Robin */
 
 void rr(int quantum)
 {
-    ofstream myfile;
-    myfile.open ("0013428.txt");
+    int     time,            /* time unit of this algorithm */
+            i,               /* index of process */ 
+            flag = 0,        /* flag = 1 means process is finished */
+            remain = process_count;        /* remaining process count */
 
-    int time, i; 
-    int remain = process_count;
-    int flag = 0;   // flag = 1 means a process is finished
 
-    // each iteration do a time quatum task
+    /* each iteration do the task in one time unit */
     for(time = 0, i = 1; remain != 0; ) 
     {
-        // for(int j = 1; j <= process_count; j++)
-        // {
-        //     if(p[j].arrive_t <= time)
-        //         cout << "process " << j << " ";
-        // }
-        // cout << endl;
-        // process burst time < time quantum
         if(p[i].remain_t <= quantum && p[i].remain_t > 0)
         {
             myfile << "P" << i << "\t" << time << "-";
 
             time += p[i].remain_t;
             p[i].remain_t = 0;
+
+            /* process finished */
             flag = 1;
             
+            /* when process is finished, print current time */
             myfile << time << endl;
         }
-        // process burst time > time quantum
+        /* process burst time > time quantum */
         else if(p[i].remain_t > 0)
         {
             myfile << "P" << i << "\t" << time << "-";
 
             p[i].remain_t -= quantum;
             time += quantum;
+            /* time quantum is over, print current time */
             myfile << time << endl;
         }
 
-        // when one process is done
+        /* do when one of the process is done */
         if(p[i].remain_t == 0 && flag == 1)
         {
             remain--;
@@ -224,7 +225,7 @@ void rr(int quantum)
             flag = 0;
         }
 
-        // round
+        /* round */
         if(i == process_count)
             i = 1;
         else if(p[i+1].arrive_t <= time)
@@ -232,14 +233,21 @@ void rr(int quantum)
         else
             i = 1;
     }
+}
+
+
+/* Helper Method */
+
+void printAvg()
+{
+    double avg_waiting = (double) waiting_time / process_count;
+    double avg_turnaround = (double) turnaround_time / process_count;
 
     myfile << fixed << setprecision(2);
     myfile << "Average Waiting Time: " << (double)waiting_time / process_count << endl;
     myfile << "Average Turnaround Time: " << (double)turnaround_time / process_count << endl;
 }
 
-
-// testing the input file format
 void testformat()
 {
     cout << name_of_algo << endl;

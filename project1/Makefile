@@ -1,2 +1,5 @@
 program:
-	g++ -o hw1 hw1.cpp 
+	g++ -o project1 project1.cpp 
+
+clean:
+	rm project1
