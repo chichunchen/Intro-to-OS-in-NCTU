@@ -20,6 +20,7 @@
 *.exe
 *.out
 *.app
+bin/
 
 # Text File
 0013428.txt

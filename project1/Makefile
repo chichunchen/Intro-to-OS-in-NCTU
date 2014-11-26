@@ -1,5 +1,7 @@
+SHELL=/bin/sh
+
 program:
-	g++ -o project1 project1.cpp 
+	g++ -o bin/project1 project1.cpp 
 
 clean:
-	rm project1
+	rm -f bin/*

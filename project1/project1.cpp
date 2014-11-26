@@ -186,12 +186,17 @@ void rr(int quantum)
     int     time,            /* time unit of this algorithm */
             i,               /* index of process */ 
             flag = 0,        /* flag = 1 means process is finished */
+            queue_flag,                    /* if queue flag is 0 means there are 
+                                               available process after process[i]  */
             remain = process_count;        /* remaining process count */
 
 
     /* each iteration do the task in one time unit */
     for(time = 0, i = 1; remain != 0; ) 
     {
+        /* set queue_flag = 0 every time unit */
+        queue_flag = 0;
+
         if(p[i].remain_t <= quantum && p[i].remain_t > 0)
         {
             myfile << "P" << i << "\t" << time << "-";
@@ -223,10 +228,19 @@ void rr(int quantum)
             waiting_time += time - p[i].burst_t - p[i].arrive_t;
             turnaround_time += time - p[i].arrive_t;
             flag = 0;
+
+            /* check whether turnaround or not */
+            queue_flag = 1;
+            for (int j = i; j <= process_count; j++) {
+                /* turn a round if there are available process */
+                if(p[j].remain_t > 0 && p[j].arrive_t < time) {
+                    queue_flag = 0;
+                }
+            }
         }
 
         /* round */
-        if(i == process_count)
+        if(i == process_count || queue_flag == 1)
             i = 1;
         else if(p[i+1].arrive_t <= time)
             i++;
