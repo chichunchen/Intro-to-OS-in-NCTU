@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <pthread.h>
+#include <sys/shm.h>
 using namespace std;
 
 /* Initialization */
@@ -8,6 +9,7 @@ using namespace std;
 string filename[4]={"testdata1.txt", "testdata2.txt", "testdata3.txt", "testdata4.txt"};
 int const thread_count = 4;
 pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+pthread_key_t key;
 
 /* Function Declartions */
 
@@ -21,6 +23,7 @@ int main(int argc, const char *argv[])
     pthread_t *threads = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
     pthread_attr_t attr;
     pthread_attr_init(&attr);
+    pthread_key_create(&key, NULL);
 
     /* open shared memory file */
     ofstream sharefile;
@@ -51,6 +54,11 @@ void *read(void* thread_id)
     long tid = (long)thread_id;
     string line;
 
+    /* Thread Local Storage for sum */
+    int *sum = (int *)malloc(sizeof(int));
+    *sum = 0;
+    pthread_setspecific(key, sum);
+
     ifstream testfile(filename[tid]);
     fstream sharedfile;
     sharedfile.open("Share.txt", fstream::app);
@@ -59,11 +67,20 @@ void *read(void* thread_id)
     {
         while(getline(testfile, line)) 
         {
-            pthread_mutex_lock(&mu);
-            /* write to share file */
-            sharedfile << "Thread" << tid + 1 << " :  " << line << endl;
-            pthread_mutex_unlock(&mu);
+            *sum += atoi(line.c_str());
+            cout << "sum is " << *sum << " from thread " << tid << endl;
+
+            if(line.compare("wait") == 0) {
+                pthread_mutex_lock(&mu);
+                sharedfile << "Thread" << tid + 1 << " :  " << line << endl;
+                pthread_mutex_unlock(&mu);
+
+                /* after wait, set sum to 0 */
+                *sum = 0;
+            }
         }
+        pthread_setspecific(key, NULL);
+        free(sum);
         testfile.close();
     }
     else {
