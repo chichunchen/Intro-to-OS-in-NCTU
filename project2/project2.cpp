@@ -4,12 +4,16 @@
 using namespace std;
 
 /* Initialization */
+
 string filename[4]={"testdata1.txt", "testdata2.txt", "testdata3.txt", "testdata4.txt"};
 int const thread_count = 4;
 pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
 
 /* Function Declartions */
+
 void *read(void*);
+
+/* Main function */
 
 int main(int argc, const char *argv[])
 {
@@ -39,6 +43,8 @@ int main(int argc, const char *argv[])
     free(threads);
     return 0;
 }
+
+/* Implementation */
 
 void *read(void* thread_id)
 {
