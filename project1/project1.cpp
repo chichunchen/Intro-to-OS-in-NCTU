@@ -112,53 +112,68 @@ void cpu_scheduler()
 
 void fcfs()
 {
-    int count = 0, time = 0, smallest; 
+    int    count = 0,       /* number of finished process */ 
+           time = 0,        /* current time */  
+           smallest;        /* First-Come process index */ 
+
     p[10].arrive_t = 9999;
 
     while(count != process_count) {
-        smallest = 10;
+        smallest = 10;      /* Assume that process range from 1~9
+                               , init process index to 10 in convenience */
     
         for(int i = 1; i <= process_count; i++) {
-            if(p[i].arrive_t < p[smallest].arrive_t && p[i].remain_t > 0) {
+            if(p[i].arrive_t < p[smallest].arrive_t             /* first-come */
+                                && p[i].remain_t > 0) {         /* check available */
                 smallest = i;
             }
         }
 
+        /* switch based time  */
         if(time < p[smallest].arrive_t)
             time = p[smallest].arrive_t;
 
         myfile << "P" << smallest << "\t" << time << "-";
 
-        time += p[smallest].burst_t;
+        time += p[smallest].burst_t;            /* Increment current time */
         waiting_time += time - p[smallest].arrive_t - p[smallest].burst_t;
         turnaround_time += time - p[smallest].arrive_t;
 
+        /* print current time */
         myfile << time << endl;
 
+        /* process finished */
         p[smallest].remain_t = 0;
         count++;
     }
 }
 
-/* Shortest-Remaining time First */
+/* Shortest-Remaining Time First */
 
 void srtf()
 {
-    int smallest;
-    int smallest_last;  // store the last smallest for comparing
-    int remain = 0, time;
+    int     smallest,
+            smallest_last,      // store the last smallest for comparing
+            remain = 0, 
+            time;
 
     p[10].remain_t = 9999;
     for(time = 0; remain != process_count; time++) {
         smallest = 10;
-        // find the shortest burst time process
+        /* find the shortest time process */
         for(int i = 1; i <= process_count; i++) {
-            if(p[i].arrive_t < time && p[i].remain_t < p[smallest].remain_t && p[i].remain_t > 0) {
+            if(p[i].arrive_t < time                         /* Available process */
+                && p[i].remain_t < p[smallest].remain_t     /* find the smallest time process */
+                && p[i].remain_t > 0)                       /* not finished */ 
+            {
                 smallest = i;
             }
         }
         p[smallest].remain_t--;
 
+        /* if the process is preempted, 
+         * print current time for previous process i
+         * */
         if(smallest != 10 && smallest != smallest_last) {
             if(time-1 != 0)
                 myfile << time-1 << endl;
@@ -166,6 +181,7 @@ void srtf()
             myfile << "P" << smallest << "\t" << time-1 << "-";
         }
 
+        /* if current process finish */
         if(p[smallest].remain_t == 0) {
             remain++;
             
@@ -173,7 +189,7 @@ void srtf()
             turnaround_time += time - p[smallest].arrive_t;
         }
         
-        // store the smallest to compare 
+        /* store the smallest process index for comparing */
         smallest_last = smallest;
     }
     myfile << time - 1 << endl;
