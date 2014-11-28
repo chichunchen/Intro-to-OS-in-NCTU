@@ -5,3 +5,4 @@ program:
 
 clean:
 	rm -f bin/*
+	rm 0013428.txt

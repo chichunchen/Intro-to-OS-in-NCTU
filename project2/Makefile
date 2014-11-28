@@ -1,5 +1,7 @@
 program:
-	g++ -o project2 project2.cpp
+	g++ -o bin/project2 project2.cpp
 
 clean:
-	rm project2 
+	rm bin/project2 
+	rm Share.txt
+	rm Result.txt

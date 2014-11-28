@@ -8,6 +8,8 @@ using namespace std;
 string filename[4]={"testdata1.txt", "testdata2.txt", "testdata3.txt", "testdata4.txt"};
 int const thread_count = 4;
 pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+/* declare share memory file */
+ofstream sharefile;
 
 /* Function Declartions */
 
@@ -23,8 +25,7 @@ int main(int argc, const char *argv[])
     pthread_attr_init(&attr);
 
     /* open shared memory file */
-    ofstream sharefile;
-    sharefile.open("Shared.txt");
+    sharefile.open("Share.txt");
 
     /* open result file */
     ofstream resultfile;
@@ -52,8 +53,6 @@ void *read(void* thread_id)
     string line;
 
     ifstream testfile(filename[tid]);
-    fstream sharedfile;
-    sharedfile.open("Share.txt", fstream::app);
 
     if (testfile.is_open()) 
     {
@@ -61,7 +60,7 @@ void *read(void* thread_id)
         {
             pthread_mutex_lock(&mu);
             /* write to share file */
-            sharedfile << "Thread" << tid + 1 << " :  " << line << endl;
+            sharefile << "Thread" << tid + 1 << " :  " << line << endl;
             pthread_mutex_unlock(&mu);
         }
         testfile.close();
