@@ -1,8 +1,0 @@
-Thread1 :  2
-Thread2 :  4
-Thread3 :  6
-Thread4 :  8
-Thread1 :  2
-Thread2 :  4
-Thread3 :  6
-Thread4 :  8
