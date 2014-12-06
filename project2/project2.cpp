@@ -28,7 +28,6 @@ ofstream resultfile;                                   /* Declare result file */
 pthread_key_t key;                                     /* Thread local Storage Key */
 
 int global_sum = 0;                                    /* Share Memory */
-int write_sum = 0;
 
 //----------------------------------------------------
 /* Function Protocol */
@@ -94,11 +93,32 @@ void *read(void* thread_id)
 
             /* if line equals wait */
             if(line.compare("wait") == 0) {
+                pthread_mutex_lock(&mu);
+                /* when encounter wait, set thread digit to 1 */
+                event_flags |= flag;
+                cout << "event_flags: " << event_flags << endl;
+                cout << "Thread " << tid + 1 << ": sum is " << *sum << endl << endl;
+                global_sum += *sum;
 
+                /* wait for other read thread */
+                cout << "Wait for other read thread" << endl;
+                pthread_cond_wait(&cond, &mu);
+
+                /* signal other read thread */
+                // this way do not choose a specify thread, so it is possibly to 
+                // signal to a thread with fewer data.
+                pthread_cond_signal(&cond);
+
+                pthread_mutex_unlock(&mu);
                 /* after wait, set sum to 0 */
                 *sum = 0;
             }
         }
+        /* This thread has read through the file */
+        pthread_mutex_lock(&mu);
+        finished_flags |= flag;
+        // cout << "finished flag" << finished_flags << endl;
+        pthread_mutex_unlock(&mu);
     }
     else {
         cout << "Unable to open file, check out the name of file.\n";
@@ -115,8 +135,25 @@ void *write(void* thread_id)
     long   tid = (long)thread_id;
     int    count = 1;    /* Count the number of Global Sum */
 
-    
-    
+    while(1) {
+        // if four of the read thread meet wait, then signal 
+        if(event_flags == 15) {
+            pthread_mutex_lock(&mu);
+            cout << endl << "----------------" << endl;
+            cout << "No. " << count << " output : " << global_sum << endl;
+            cout << "----------------" << endl << endl;
+            resultfile << "No. " << count << " output : " << global_sum << endl;
+            event_flags = 0;
+            global_sum = 0;
+            /* Share Memory has written, signal one of the read thread */
+            pthread_cond_signal(&cond);
+            count++;
+            pthread_mutex_unlock(&mu);
+        }
+        if (finished_flags == 15) {
+            break;
+        }
+    }
 
     return NULL;
 }
