@@ -94,33 +94,11 @@ void *read(void* thread_id)
 
             /* if line equals wait */
             if(line.compare("wait") == 0) {
-                pthread_mutex_lock(&mu);
-                /* when encounter wait, set thread digit to 1 */
-                event_flags |= flag;
-                cout << "event_flags: " << event_flags << endl;
-                cout << "Thread " << tid + 1 << ": sum is " << *sum << endl << endl;
-                global_sum += *sum;
-
-                /* all read threads flag are set */
-                if(event_flags == 15) {
-                    pthread_cond_signal(&cond);
-                    write_sum = global_sum;
-                    global_sum = 0;
-                    cout << "Threshold reached, set global sum to 0. Send signal" << endl;
-                    event_flags = 0;
-                    cout << "reset event flag to : " << event_flags << endl << endl;
-                }
-                pthread_mutex_unlock(&mu);
 
                 /* after wait, set sum to 0 */
                 *sum = 0;
             }
         }
-        /* This thread has read through the file */
-        pthread_mutex_lock(&mu);
-        finished_flags |= flag;
-        // cout << "finished flag" << finished_flags << endl;
-        pthread_mutex_unlock(&mu);
     }
     else {
         cout << "Unable to open file, check out the name of file.\n";
@@ -138,26 +116,6 @@ void *write(void* thread_id)
     int    count = 1;    /* Count the number of Global Sum */
 
     
-    // pthread_mutex_lock(&mu);
-    // while (finished_flags != 15) {
-        /* wait until all read thread signal encounter "wait" */
-    //    cout << "Write thread start waiting." << endl;
-    //    pthread_cond_wait(&cond, &mu);
-    //    cout << "----------------" << endl;
-    //    cout << "Signal received." << endl;
-        
-    //    cout << "No. " << count << " output : " << write_sum << endl;
-    //    resultfile << "No. " << count << " output : " << write_sum << endl;
-    //    write_sum = 0;
-    //    cout << "Write done. set global sum to 0" << endl;
-    //    cout << "----------------" << endl << endl;
-
-    //    count++;
-    //    if (finished_flags != 15) {
-    //        break;
-    //    }
-    //}
-    //pthread_mutex_unlock(&mu);
     
 
     return NULL;
