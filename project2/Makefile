@@ -3,5 +3,4 @@ program:
 
 clean:
 	rm bin/project2 
-	rm Share.txt
 	rm Result.txt

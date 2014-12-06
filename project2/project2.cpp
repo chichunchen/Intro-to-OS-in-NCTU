@@ -28,6 +28,7 @@ ofstream resultfile;                                   /* Declare result file */
 pthread_key_t key;                                     /* Thread local Storage Key */
 
 int global_sum = 0;                                    /* Share Memory */
+int write_sum = 0;
 
 //----------------------------------------------------
 /* Function Protocol */
@@ -103,7 +104,9 @@ void *read(void* thread_id)
                 /* all read threads flag are set */
                 if(event_flags == 15) {
                     pthread_cond_signal(&cond);
-                    cout << "Threshold reached. Send signal" << endl;
+                    write_sum = global_sum;
+                    global_sum = 0;
+                    cout << "Threshold reached, set global sum to 0. Send signal" << endl;
                     event_flags = 0;
                     cout << "reset event flag to : " << event_flags << endl << endl;
                 }
@@ -134,25 +137,28 @@ void *write(void* thread_id)
     long   tid = (long)thread_id;
     int    count = 1;    /* Count the number of Global Sum */
 
-    pthread_mutex_lock(&mu);
-    while (finished_flags != 15) {
+    
+    // pthread_mutex_lock(&mu);
+    // while (finished_flags != 15) {
         /* wait until all read thread signal encounter "wait" */
-        cout << "Write thread start waiting." << endl;
-        pthread_cond_wait(&cond, &mu);
-        cout << "----------------" << endl;
-        cout << "Signal received." << endl;
+    //    cout << "Write thread start waiting." << endl;
+    //    pthread_cond_wait(&cond, &mu);
+    //    cout << "----------------" << endl;
+    //    cout << "Signal received." << endl;
         
-        cout << "No. " << count << " output : " << global_sum << endl;
-        cout << "----------------" << endl << endl;
-        resultfile << "No. " << count << " output : " << global_sum << endl;
-        global_sum = 0;
+    //    cout << "No. " << count << " output : " << write_sum << endl;
+    //    resultfile << "No. " << count << " output : " << write_sum << endl;
+    //    write_sum = 0;
+    //    cout << "Write done. set global sum to 0" << endl;
+    //    cout << "----------------" << endl << endl;
 
-        count++;
-        if (finished_flags != 15) {
-            break;
-        }
-    }
-    pthread_mutex_unlock(&mu);
+    //    count++;
+    //    if (finished_flags != 15) {
+    //        break;
+    //    }
+    //}
+    //pthread_mutex_unlock(&mu);
+    
 
     return NULL;
 }
