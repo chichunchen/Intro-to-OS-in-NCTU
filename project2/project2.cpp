@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <pthread.h>
 using namespace std;
@@ -43,13 +44,14 @@ void *write(void*);
 int main(int argc, const char *argv[])
 {
     /* Prepare for pthread_create */
-    pthread_t *threads = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
+    // #include <cstdlib> will load malloc into namespace*/
+    pthread_t *threads = (pthread_t*)malloc(thread_count * sizeof(pthread_t)); 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_key_create(&key, NULL);
 
     /* open result file */
-    resultfile.open(RESULT_FILE);
+    resultfile.open(RESULT_FILE.c_str());
 
     /* use long in case of a 64-bit system */
     long thread;
@@ -83,7 +85,7 @@ void *read(void* thread_id)
     *sum = 0;
     pthread_setspecific(key, sum);
 
-    ifstream testfile(filename[tid]);
+    ifstream testfile(filename[tid].c_str());
 
     if (testfile.is_open()) 
     {
@@ -96,13 +98,13 @@ void *read(void* thread_id)
                 pthread_mutex_lock(&mu);
                 /* when encounter wait, set thread digit to 1 */
                 event_flags |= flag;
-                cout << "event_flags: " << event_flags << endl;
-                cout << "Thread " << tid + 1 << ": sum is " << *sum << endl << endl;
+                cout << "Thread " << tid + 1 << ": sum is " << *sum << endl;
                 global_sum += *sum;
 
                 /* wait for other read thread */
-                cout << "Wait for other read thread" << endl;
+                cout << "Thread #" << tid + 1 << " has reached the barrier. " << endl << endl;
                 pthread_cond_wait(&cond, &mu);
+                cout << "Thread #" << tid + 1 << " wake up. " << endl;
 
                 /* signal other read thread */
                 // this way do not choose a specify thread, so it is possibly to 
@@ -147,6 +149,7 @@ void *write(void* thread_id)
             global_sum = 0;
             /* Share Memory has written, signal one of the read thread */
             pthread_cond_signal(&cond);
+            cout << "Write thread send signal to all read threads" << endl;
             count++;
             pthread_mutex_unlock(&mu);
         }

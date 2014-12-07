@@ -1,5 +1,5 @@
 program:
-	g++ -o bin/project2 project2.cpp
+	g++ -o bin/project2 project2.cpp -lpthread
 
 clean:
 	rm bin/project2 
