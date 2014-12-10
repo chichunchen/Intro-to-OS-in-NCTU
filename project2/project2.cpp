@@ -1,162 +1,147 @@
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
-#include <pthread.h>
+#include <pthread.h> 
+#include <semaphore.h> 
 using namespace std;
 
 //----------------------------------------------------
-/* Initialization */
+//* Initialization */
 //----------------------------------------------------
 
-string filename[4]={"testdata1.txt", 
-                    "testdata2.txt", 
-                    "testdata3.txt", 
-                    "testdata4.txt"};
+string input[4]={"testdata1.txt","testdata2.txt","testdata3.txt","testdata4.txt"};
 
-string RESULT_FILE = "Result.txt";
+sem_t sem[4];             // semaphores for the four thread
+sem_t total_sem;          // semaphore for the summing thread
+sem_t file_sem;           // semaphore for the global varible writing
 
-
-int const thread_count = 5;                            /* 4 read 1 writes */
-
-pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;        /* Initialize mutex lock */
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;        /* Initialize pthread condition */
-
-unsigned event_flags = 0;
-unsigned finished_flags = 0;                           /* Check whether read thread finished */
-
-ofstream resultfile;                                   /* Declare result file */
-
-pthread_key_t key;                                     /* Thread local Storage Key */
-
-int global_sum = 0;                                    /* Share Memory */
+long long final_sum=0;
+int flag=1;
 
 //----------------------------------------------------
 /* Function Protocol */
 //----------------------------------------------------
 
-void *read(void*);
-void *write(void*);
+void *readEntity(void*);
+void *writeEntity(void*);
 
 //----------------------------------------------------
 /* Main function */
 //----------------------------------------------------
 
-int main(int argc, const char *argv[])
+int main()
 {
-    /* Prepare for pthread_create */
-    // #include <cstdlib> will load malloc into namespace*/
-    pthread_t *threads = (pthread_t*)malloc(thread_count * sizeof(pthread_t)); 
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_key_create(&key, NULL);
+    /* Declare 4 read threads and one write thread */
+    pthread_t threads[4]; 
+    pthread_t write_thread; 
 
-    /* open result file */
-    resultfile.open(RESULT_FILE.c_str());
-
-    /* use long in case of a 64-bit system */
-    long thread;
-    for(thread = 0; thread < thread_count; thread++) {
-        if(thread < thread_count - 1)
-            pthread_create(&threads[thread], &attr, read, (void*) thread);
-        else
-            pthread_create(&threads[thread], &attr, write, (void*) thread);
+    void *status;
+    int taskids[4]={0,1,2,3};
+    int rc; //error recorder
+    for(int i = 0; i < 4; i++){
+        sem_init(&sem[i], 0, 0); //init the semaphores to 0
     }
+    sem_init(&total_sem, 0, 0);
+    sem_init(&file_sem, 0, 1); //only one can write the file
 
-    for (thread= 0; thread < thread_count; thread++) {
-        pthread_join(threads[thread], NULL);
+    /* Create thread */
+    for(int t=0;t<4;t++){
+        rc = pthread_create(&threads[t], NULL, readEntity, taskids+t);
+        if (rc){
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+        }
     }
+    pthread_create(&write_thread, NULL, writeEntity, NULL);
+    pthread_exit((void *)0);
 
-    pthread_cond_destroy(&cond);
-    pthread_mutex_destroy(&mu);
-    free(threads);
+    /* Destroy Semaphores */
+    for(int i = 0; i < 4; i++) 
+        sem_destroy(&sem[i]); 
+    sem_destroy(&file_sem);
+    sem_destroy(&total_sem);
     return 0;
 }
 
+//----------------------------------------------------
 /* Implementation */
+//----------------------------------------------------
 
-void *read(void* thread_id)
-{
-    long tid = (long)thread_id;
-    int flag = 1 << tid;
-    string line;
+void *readEntity(void *threadid)
+{ 
+    /* function for sum up before wait */
+    int    *id_ptr, 
+           taskid;
 
-    /* Thread Local Storage: sum */
-    int *sum = (int *)malloc(sizeof(int));
-    *sum = 0;
-    pthread_setspecific(key, sum);
+    id_ptr = (int*) threadid;
+    taskid = *id_ptr;
 
-    ifstream testfile(filename[tid].c_str());
-
-    if (testfile.is_open()) 
-    {
-        while(getline(testfile, line)) 
+    /* Init local sum */
+    long long sum = 0;
+    
+    /* Open testdata#.txt */
+    fstream testfile;
+    testfile.open(input[taskid].c_str());
+    
+    if(testfile){
+        string tmp;
+        while(getline(testfile, tmp))
         {
-            *sum += atoi(line.c_str());
+            if(tmp == "wait" || tmp == "wait\r")
+            {
+                /* Only one read entity can write the global sum at a time */
+                sem_wait(&file_sem); 
+                final_sum += sum; 
+                sem_post(&file_sem);
 
-            /* if line equals wait */
-            if(line.compare("wait") == 0) {
-                pthread_mutex_lock(&mu);
-                /* when encounter wait, set thread digit to 1 */
-                event_flags |= flag;
-                cout << "Thread " << tid + 1 << ": sum is " << *sum << endl;
-                global_sum += *sum;
+                /* set local sum to zero */
+                sum = 0; 
 
-                /* wait for other read thread */
-                cout << "Thread #" << tid + 1 << " has reached the barrier. " << endl << endl;
-                pthread_cond_wait(&cond, &mu);
-                cout << "Thread #" << tid + 1 << " wake up. " << endl;
-
-                /* signal other read thread */
-                // this way do not choose a specify thread, so it is possibly to 
-                // signal to a thread with fewer data.
-                pthread_cond_signal(&cond);
-
-                pthread_mutex_unlock(&mu);
-                /* after wait, set sum to 0 */
-                *sum = 0;
+                /* Signal write entity to write global sum to Result file */
+                sem_post(&total_sem); 
+                /* Wait for other threads and the total summing thread */
+                sem_wait(&sem[taskid]); 
+            }
+            else
+            {
+                sum += atoi(tmp.c_str());
             }
         }
-        /* This thread has read through the file */
-        pthread_mutex_lock(&mu);
-        finished_flags |= flag;
-        // cout << "finished flag" << finished_flags << endl;
-        pthread_mutex_unlock(&mu);
     }
-    else {
+    else 
         cout << "Unable to open file, check out the name of file.\n";
-    }
-    pthread_setspecific(key, NULL);
-    free(sum);
-    testfile.close();
-
-    return NULL;
+    
+    flag = 0;
+    pthread_exit((void *)0);
 }
 
-void *write(void* thread_id) 
+void *writeEntity(void*)
 {
-    long   tid = (long)thread_id;
-    int    count = 1;    /* Count the number of Global Sum */
+    int    sem_value = 0,
+           count=1;
 
-    while(1) {
-        // if four of the read thread meet wait, then signal 
-        if(event_flags == 15) {
-            pthread_mutex_lock(&mu);
-            cout << endl << "----------------" << endl;
-            cout << "No. " << count << " output : " << global_sum << endl;
-            cout << "----------------" << endl << endl;
-            resultfile << "No. " << count << " output : " << global_sum << endl;
-            event_flags = 0;
-            global_sum = 0;
-            /* Share Memory has written, signal one of the read thread */
-            pthread_cond_signal(&cond);
-            cout << "Write thread send signal to all read threads" << endl;
+    /* Open Result.txt */
+    fstream file;
+    file.open("Result.txt",ios::out);
+
+    while(flag)
+    {
+        sem_getvalue(&total_sem, &sem_value);
+        if(sem_value == 4)
+        {
+            /* local summing is done,write the file! */
+            file << "No. " << count << " output : " << final_sum << endl;
             count++;
-            pthread_mutex_unlock(&mu);
-        }
-        if (finished_flags == 15) {
-            break;
+            final_sum = 0;
+            for(int i = 0; i < 4; i++)
+            {
+                /* Four of the reading threads are ready to go */
+                sem_post(&sem[i]); 
+                /* Wait for reading threads */
+                sem_wait(&total_sem); 
+            }
         }
     }
 
-    return NULL;
+    file.close();
+    pthread_exit((void *)0);
 }
