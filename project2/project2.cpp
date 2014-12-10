@@ -9,14 +9,14 @@ using namespace std;
 //* Initialization */
 //----------------------------------------------------
 
-string input[4]={"testdata1.txt","testdata2.txt","testdata3.txt","testdata4.txt"};
+string input[4]={"testdata1.txt", "testdata2.txt", "testdata3.txt", "testdata4.txt"};
 
 sem_t sem[4];             // semaphores for the four thread
 sem_t total_sem;          // semaphore for the summing thread
 sem_t file_sem;           // semaphore for the global varible writing
 
-long long final_sum=0;
-int flag=1;
+long long final_sum = 0;
+int flag = 1;             // check all things done
 
 //----------------------------------------------------
 /* Function Protocol */
@@ -36,18 +36,18 @@ int main()
     pthread_t write_thread; 
 
     void *status;
-    int taskids[4]={0,1,2,3};
+    int taskids[4]={0, 1, 2, 3};
     int rc; //error recorder
-    for(int i = 0; i < 4; i++){
-        sem_init(&sem[i], 0, 0); //init the semaphores to 0
+    for(int i = 0; i < 4; i++) {
+        sem_init(&sem[i], 0, 0);      // init the semaphores to 0
     }
     sem_init(&total_sem, 0, 0);
-    sem_init(&file_sem, 0, 1); //only one can write the file
+    sem_init(&file_sem, 0, 1);        // only one can write the file
 
-    /* Create thread */
-    for(int t=0;t<4;t++){
-        rc = pthread_create(&threads[t], NULL, readEntity, taskids+t);
-        if (rc){
+    /* Create read threads */
+    for(int t = 0; t < 4; t++){
+        rc = pthread_create(&threads[t], NULL, readEntity, taskids + t);
+        if (rc) {
             printf("ERROR; return code from pthread_create() is %d\n", rc);
         }
     }
